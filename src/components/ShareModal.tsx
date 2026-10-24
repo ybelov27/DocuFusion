@@ -1,11 +1,6 @@
 import React, { useState } from 'react';
-import {
-  PdfDocument, UserAccess
-} from '../types/pdf';
-import {
-  Copy, Check, ShieldCheck, Lock, Globe, Building, Users,
-  UserPlus, ChevronDown, X
-} from 'lucide-react';
+import { PdfDocument, UserAccess } from '../types/pdf';
+import { Copy, Check, ShieldCheck } from 'lucide-react';
 
 interface ShareModalProps {
   document: PdfDocument;
@@ -25,7 +20,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   const [newRole, setNewRole] = useState<'Editor' | 'Viewer' | 'Commenter'>('Viewer');
 
   const handleCopyLink = () => {
-    const fakeLink = `https://docusphere.drive.app/share/pdf/${document.id}?key=sec_99218`;
+    const fakeLink = `https://docufusion.drive.app/share/pdf/${document.id}?key=sec_99218`;
     navigator.clipboard.writeText(fakeLink);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -39,7 +34,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       id: `u-${Date.now()}`,
       name: newEmail.split('@')[0].replace('.', ' '),
       email: newEmail.trim(),
-      avatarUrl: `https://images.unsplash.com/photo-${1534528741775 + Math.floor(Math.random() * 1000)}?w=100&auto=format&fit=crop&q=80`,
+      avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80`,
       role: newRole
     };
 
@@ -62,16 +57,16 @@ export const ShareModal: React.FC<ShareModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in duration-150 relative">
+    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in duration-150 relative">
 
-        {/* Header matching screenshot */}
+        {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div>
             <h3 className="font-bold text-slate-900 text-base">
               Share "{document.title}"
             </h3>
-            <p className="text-xs text-slate-400">Manage permissions & secure link access</p>
+            <p className="text-xs text-slate-400">Manage permissions & link access</p>
           </div>
           <button
             onClick={onClose}
@@ -111,7 +106,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           </div>
         </form>
 
-        {/* People with access List (Matching screenshot) */}
+        {/* People with access List */}
         <div className="space-y-3">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">People with access</p>
 
@@ -141,14 +136,14 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           </div>
         </div>
 
-        {/* General Access Section (Matching screenshot) */}
+        {/* General Access Section */}
         <div className="space-y-2 pt-2 border-t border-slate-100">
           <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">General access</p>
 
           <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-2xl border border-slate-200/80">
             <div className="flex items-center gap-2.5">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-extrabold shadow-2xs">
-                C
+                D
               </div>
               <div>
                 <select
@@ -160,7 +155,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                   }}
                   className="bg-transparent font-bold text-xs text-slate-800 border-none focus:outline-none cursor-pointer p-0"
                 >
-                  <option value="Domain Access (Cymbal Pty Ltd)">Cymbal Pty Ltd</option>
+                  <option value="Domain Access (DocuFusion)">DocuFusion Domain</option>
                   <option value="Restricted">Restricted</option>
                   <option value="Anyone with link">Anyone with link</option>
                 </select>
@@ -174,13 +169,13 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           </div>
         </div>
 
-        {/* Encryption Checkbox Card (Matching Screenshot bottom overlay) */}
+        {/* Encryption Checkbox Card */}
         <div className="p-3 bg-blue-50/80 rounded-2xl border border-blue-200 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-5 h-5 text-blue-600" />
             <div>
               <p className="text-xs font-bold text-slate-800">Client-Side Zero Knowledge</p>
-              <p className="text-[10px] text-slate-500">AES-256 end-to-end PDF protection</p>
+              <p className="text-[10px] text-slate-500">AES-256 end-to-end protection</p>
             </div>
           </div>
 
@@ -191,11 +186,11 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               onChange={handleToggleEncryption}
               className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 cursor-pointer"
             />
-            <span>Add additional encryption</span>
+            <span>Add encryption</span>
           </label>
         </div>
 
-        {/* Bottom Actions (Matching Screenshot: Copy link & Done) */}
+        {/* Bottom Actions */}
         <div className="flex items-center justify-between pt-2 border-t border-slate-100">
           <button
             onClick={handleCopyLink}

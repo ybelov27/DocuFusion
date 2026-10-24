@@ -1,11 +1,8 @@
 import React, { useState } from 'react';
+import { PdfDocument, HighlightAnnotation, HighlightColor } from '../types/pdf';
 import {
-  PdfDocument, HighlightAnnotation, HighlightColor
-} from '../types/pdf';
-import {
-  ArrowLeft, ZoomIn, ZoomOut, RotateCw, Search, Highlighter,
-  Share2, Shield, Download, FileText, ChevronLeft, ChevronRight,
-  MessageSquare, Trash2, Plus, Lock, CheckCircle, Sparkles, Filter, Bookmark
+  ArrowLeft, ZoomIn, ZoomOut, RotateCw, Share2, Shield, Download,
+  ChevronLeft, ChevronRight, MessageSquare, Trash2, Bookmark, Printer, Maximize2, Star
 } from 'lucide-react';
 
 interface PdfViewerProps {
@@ -14,8 +11,6 @@ interface PdfViewerProps {
   onOpenShareModal: () => void;
   onAddHighlight: (highlight: HighlightAnnotation) => void;
   onDeleteHighlight: (highlightId: string) => void;
-  onToggleAiPanel: () => void;
-  isAiPanelOpen: boolean;
 }
 
 export const PdfViewer: React.FC<PdfViewerProps> = ({
@@ -23,15 +18,12 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   onBackToDrive,
   onOpenShareModal,
   onAddHighlight,
-  onDeleteHighlight,
-  onToggleAiPanel,
-  isAiPanelOpen
+  onDeleteHighlight
 }) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [zoomLevel, setZoomLevel] = useState<number>(100);
   const [rotation, setRotation] = useState<number>(0);
-  const [sidebarTab, setSidebarTab] = useState<'thumbnails' | 'annotations'>('thumbnails');
-  const [docSearchQuery, setDocSearchQuery] = useState<string>('');
+  const [sidebarTab, setSidebarTab] = useState<'thumbnails' | 'annotations' | 'comments'>('thumbnails');
 
   // Highlighting creation state
   const [selectedText, setSelectedText] = useState<string>('');
@@ -82,155 +74,144 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-65px)] bg-slate-100 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-61px)] bg-slate-200/90 overflow-hidden">
 
-      {/* Viewer Header / Toolbar */}
-      <div className="bg-white border-b border-slate-200 px-4 py-2.5 flex items-center justify-between gap-4 shrink-0 shadow-xs z-20">
+      {/* Google Drive Style PDF Viewer Toolbar Header */}
+      <div className="bg-slate-900 text-white px-4 py-2 flex items-center justify-between gap-4 shrink-0 shadow-md z-20 select-none">
 
-        {/* Left Actions: Back to Drive & Doc Title */}
-        <div className="flex items-center gap-3">
+        {/* Left Actions: Back to Drive & File Title */}
+        <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={onBackToDrive}
-            className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all cursor-pointer flex items-center gap-1.5 text-xs font-semibold"
+            className="p-1.5 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer"
             title="Back to Drive"
           >
-            <ArrowLeft className="w-4 h-4" />
-            <span className="hidden sm:inline">Back to Drive</span>
+            <ArrowLeft className="w-5 h-5" />
           </button>
 
-          <div className="h-5 w-px bg-slate-200"></div>
-
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center text-rose-600 font-extrabold text-[9px] shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-6 h-6 rounded bg-rose-600 text-white font-bold text-[10px] flex items-center justify-center shrink-0">
               PDF
             </div>
-            <div>
-              <h2 className="font-bold text-slate-900 text-xs sm:text-sm max-w-xs sm:max-w-md truncate">
-                {document.title}
-              </h2>
-              <div className="flex items-center gap-2 text-[10px] text-slate-500">
-                <span>{document.fileSize}</span>
-                <span>•</span>
-                <span>{document.pageCount} Pages</span>
-                {document.isEncrypted && (
-                  <>
-                    <span>•</span>
-                    <span className="text-emerald-600 font-semibold flex items-center gap-0.5">
-                      <Shield className="w-2.5 h-2.5" /> Encrypted
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
+            <h2 className="font-medium text-sm text-slate-100 truncate max-w-xs sm:max-w-md">
+              {document.title}
+            </h2>
+            {document.starred && <Star className="w-4 h-4 fill-amber-400 text-amber-400 shrink-0" />}
           </div>
         </div>
 
-        {/* Middle Toolbar Controls: Page Jump, Zoom, Rotate, Search */}
-        <div className="hidden lg:flex items-center gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200/80 text-xs text-slate-700 font-medium">
+        {/* Center Google Toolbar Controls: Page navigation, Zoom, Rotate, Fit */}
+        <div className="flex items-center gap-2 text-xs font-medium bg-slate-800/80 px-3 py-1.5 rounded-full border border-slate-700/60 text-slate-300">
 
-          {/* Page Jump */}
-          <div className="flex items-center gap-1 px-2">
+          {/* Page Navigation */}
+          <div className="flex items-center gap-1.5 px-1">
             <button
               disabled={currentPage <= 1}
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              className="p-1 rounded hover:bg-white disabled:opacity-30"
+              className="p-1 rounded hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+              title="Previous Page"
             >
-              <ChevronLeft className="w-3.5 h-3.5" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <span>
-              Page <strong className="text-slate-900">{currentPage}</strong> of {document.pageCount}
+              {currentPage} / {document.pageCount}
             </span>
             <button
               disabled={currentPage >= document.pageCount}
               onClick={() => setCurrentPage((p) => Math.min(document.pageCount, p + 1))}
-              className="p-1 rounded hover:bg-white disabled:opacity-30"
+              className="p-1 rounded hover:bg-slate-700 disabled:opacity-30 cursor-pointer"
+              title="Next Page"
             >
-              <ChevronRight className="w-3.5 h-3.5" />
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="h-4 w-px bg-slate-300"></div>
+          <div className="h-4 w-px bg-slate-700"></div>
 
           {/* Zoom controls */}
           <div className="flex items-center gap-1">
             <button
               onClick={handleZoomOut}
-              className="p-1.5 rounded hover:bg-white text-slate-600 hover:text-slate-900"
+              className="p-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
               title="Zoom Out"
             >
-              <ZoomOut className="w-3.5 h-3.5" />
+              <ZoomOut className="w-4 h-4" />
             </button>
-            <span className="w-12 text-center font-bold text-[11px]">{zoomLevel}%</span>
+            <span className="w-10 text-center font-semibold text-xs">{zoomLevel}%</span>
             <button
               onClick={handleZoomIn}
-              className="p-1.5 rounded hover:bg-white text-slate-600 hover:text-slate-900"
+              className="p-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
               title="Zoom In"
             >
-              <ZoomIn className="w-3.5 h-3.5" />
+              <ZoomIn className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="h-4 w-px bg-slate-300"></div>
+          <div className="h-4 w-px bg-slate-700"></div>
 
           {/* Rotate */}
           <button
             onClick={handleRotate}
-            className="p-1.5 rounded hover:bg-white text-slate-600 hover:text-slate-900"
+            className="p-1 rounded hover:bg-slate-700 text-slate-300 hover:text-white cursor-pointer"
             title="Rotate Page"
           >
-            <RotateCw className="w-3.5 h-3.5" />
+            <RotateCw className="w-4 h-4" />
           </button>
 
         </div>
 
-        {/* Right Action Buttons */}
-        <div className="flex items-center gap-2">
+        {/* Right Action Icons: Print, Download, Share, Comments */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
 
-          {/* Toggle AI Analysis Sidebar */}
           <button
-            onClick={onToggleAiPanel}
-            className={`px-3 py-1.5 rounded-xl font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs ${
-              isAiPanelOpen
-                ? 'bg-indigo-600 text-white shadow-indigo-500/20'
-                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200'
-            }`}
+            onClick={() => window.print()}
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer"
+            title="Print PDF"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            <span className="hidden sm:inline">Gemini AI</span>
+            <Printer className="w-4 h-4" />
           </button>
+
+          <a
+            href={`data:text/plain;charset=utf-8,${encodeURIComponent(document.title)}`}
+            download={document.filename}
+            className="p-2 rounded-full hover:bg-slate-800 text-slate-300 hover:text-white transition-all cursor-pointer"
+            title="Download PDF"
+          >
+            <Download className="w-4 h-4" />
+          </a>
 
           <button
             onClick={onOpenShareModal}
-            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
+            className="px-3.5 py-1.5 rounded-full bg-blue-600 hover:bg-blue-500 text-white font-semibold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
           >
             <Share2 className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Share</span>
+            <span>Share</span>
           </button>
 
         </div>
 
       </div>
 
-      {/* Main Workspace Body: Sidebar + Canvas + AI Panel */}
+      {/* Main Workspace Body */}
       <div className="flex flex-1 overflow-hidden relative">
 
         {/* Left Thumbnail / Annotations Sidebar */}
-        <div className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 hidden md:flex">
+        <div className="w-60 bg-white border-r border-slate-300 flex flex-col shrink-0 hidden md:flex">
 
           {/* Tabs */}
           <div className="flex items-center border-b border-slate-200 p-2 bg-slate-50 gap-1 text-xs font-semibold text-slate-600">
             <button
               onClick={() => setSidebarTab('thumbnails')}
-              className={`flex-1 py-1.5 rounded-lg transition-all ${
-                sidebarTab === 'thumbnails' ? 'bg-white text-blue-600 shadow-2xs font-bold' : 'hover:bg-slate-200/60'
+              className={`flex-1 py-1 rounded transition-all cursor-pointer ${
+                sidebarTab === 'thumbnails' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'hover:bg-slate-200/60'
               }`}
             >
               Pages ({document.pageCount})
             </button>
             <button
               onClick={() => setSidebarTab('annotations')}
-              className={`flex-1 py-1.5 rounded-lg transition-all ${
-                sidebarTab === 'annotations' ? 'bg-white text-blue-600 shadow-2xs font-bold' : 'hover:bg-slate-200/60'
+              className={`flex-1 py-1 rounded transition-all cursor-pointer ${
+                sidebarTab === 'annotations' ? 'bg-white text-blue-700 font-bold shadow-2xs' : 'hover:bg-slate-200/60'
               }`}
             >
               Highlights ({document.highlights.length})
@@ -241,28 +222,24 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
           <div className="flex-1 overflow-y-auto p-3 space-y-3">
             {sidebarTab === 'thumbnails' ? (
 
-              /* Thumbnail List */
               document.pages.map((p) => {
                 const isSelected = p.pageNumber === currentPage;
                 return (
                   <div
                     key={p.pageNumber}
                     onClick={() => setCurrentPage(p.pageNumber)}
-                    className={`p-3 rounded-xl border transition-all cursor-pointer space-y-1.5 ${
+                    className={`p-2.5 rounded-xl border transition-all cursor-pointer space-y-1 ${
                       isSelected
-                        ? 'border-blue-500 bg-blue-50/70 shadow-sm ring-2 ring-blue-500/20'
-                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/50 hover:bg-white'
+                        ? 'border-blue-500 bg-blue-50 shadow-xs ring-2 ring-blue-500/20'
+                        : 'border-slate-200 hover:border-slate-300 bg-slate-50/50'
                     }`}
                   >
                     <div className="flex items-center justify-between text-xs">
                       <span className="font-bold text-slate-800">Page {p.pageNumber}</span>
-                      {isSelected && <span className="text-[10px] font-semibold text-blue-600 bg-white px-1.5 py-0.5 rounded border border-blue-200">Active</span>}
                     </div>
-                    <p className="text-[10px] font-medium text-slate-500 truncate">
-                      {p.heading}
-                    </p>
-                    <div className="w-full h-12 bg-white rounded border border-slate-200 p-1.5 overflow-hidden text-[7px] text-slate-400 select-none">
-                      {p.paragraphs[0]?.substring(0, 100)}...
+                    <p className="text-[10px] text-slate-500 truncate">{p.heading}</p>
+                    <div className="w-full h-10 bg-white rounded border border-slate-200 p-1 text-[7px] text-slate-400 select-none overflow-hidden">
+                      {p.paragraphs[0]?.substring(0, 80)}...
                     </div>
                   </div>
                 );
@@ -270,12 +247,11 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
 
             ) : (
 
-              /* Annotations List */
               document.highlights.length === 0 ? (
                 <div className="text-center py-8 space-y-2 text-slate-400">
-                  <Bookmark className="w-8 h-8 mx-auto text-slate-300" />
+                  <Bookmark className="w-6 h-6 mx-auto text-slate-300" />
                   <p className="text-xs">No text highlights added yet.</p>
-                  <p className="text-[10px]">Select text on any page to highlight and comment.</p>
+                  <p className="text-[10px]">Highlight any text on the PDF to save notes.</p>
                 </div>
               ) : (
                 document.highlights.map((h) => {
@@ -284,7 +260,7 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
                     <div
                       key={h.id}
                       onClick={() => setCurrentPage(h.pageNumber)}
-                      className={`p-3 rounded-xl border ${style.border} ${style.bg} transition-all space-y-1.5 cursor-pointer relative group`}
+                      className={`p-2.5 rounded-xl border ${style.border} ${style.bg} transition-all space-y-1 cursor-pointer relative group`}
                     >
                       <div className="flex items-center justify-between text-[11px] font-bold">
                         <span className="text-slate-800">Page {h.pageNumber}</span>
@@ -299,12 +275,6 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
                       <p className={`text-xs font-medium italic ${style.text}`}>
                         "{h.selectedText}"
                       </p>
-                      {h.comment && (
-                        <div className="bg-white/80 p-1.5 rounded text-[11px] text-slate-700 border border-slate-200/60 flex items-start gap-1">
-                          <MessageSquare className="w-3 h-3 text-slate-400 shrink-0 mt-0.5" />
-                          <span>{h.comment}</span>
-                        </div>
-                      )}
                     </div>
                   );
                 })
@@ -315,15 +285,15 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
 
         </div>
 
-        {/* Center Canvas: PDF Rendered Page */}
+        {/* Center Canvas: Document Pane */}
         <div
-          className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-start bg-slate-200/80"
+          className="flex-1 overflow-y-auto p-4 md:p-8 flex flex-col items-center justify-start bg-slate-300/60"
           onMouseUp={handleTextSelection}
         >
 
           {/* Highlight popover creator */}
           {showHighlightPopover && (
-            <div className="fixed top-24 z-50 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 max-w-sm w-full space-y-3 animate-in fade-in zoom-in duration-150">
+            <div className="fixed top-20 z-50 bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 max-w-sm w-full space-y-3 animate-in fade-in zoom-in duration-150">
               <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                 <span className="text-xs font-bold text-slate-800">Highlight Selected Text</span>
                 <button onClick={() => setShowHighlightPopover(false)} className="text-slate-400 text-xs">✕</button>
@@ -333,24 +303,22 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
                 "{selectedText}"
               </p>
 
-              {/* Color selector */}
               <div className="flex items-center gap-2">
                 <span className="text-[11px] font-semibold text-slate-600">Color:</span>
                 {(['yellow', 'green', 'blue', 'purple'] as HighlightColor[]).map((c) => (
                   <button
                     key={c}
                     onClick={() => setActiveColor(c)}
-                    className={`w-6 h-6 rounded-full border-2 transition-all ${
+                    className={`w-5 h-5 rounded-full border-2 transition-all cursor-pointer ${
                       c === 'yellow' ? 'bg-amber-300' : c === 'green' ? 'bg-emerald-300' : c === 'blue' ? 'bg-sky-300' : 'bg-purple-300'
                     } ${activeColor === c ? 'scale-110 border-slate-800' : 'border-transparent'}`}
                   />
                 ))}
               </div>
 
-              {/* Note input */}
               <input
                 type="text"
-                placeholder="Add optional comment note..."
+                placeholder="Add comment or note..."
                 value={annotationNote}
                 onChange={(e) => setAnnotationNote(e.target.value)}
                 className="w-full text-xs px-3 py-2 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
@@ -383,28 +351,22 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
                 style={{
                   transform: `scale(${zoomLevel / 100}) rotate(${rotation}deg)`,
                   transformOrigin: 'top center',
-                  transition: 'transform 0.2s ease-out'
+                  transition: 'transform 0.15s ease-out'
                 }}
-                className="bg-white rounded-xl border border-slate-300 shadow-2xl p-8 md:p-12 max-w-3xl w-full min-h-[900px] my-4 select-text font-sans relative"
+                className="bg-white rounded-lg border border-slate-300 shadow-xl p-8 md:p-12 max-w-3xl w-full min-h-[900px] my-4 select-text font-sans relative"
               >
 
-                {/* Page Watermark Header */}
-                <div className="flex items-center justify-between border-b border-slate-200 pb-4 mb-8 text-xs text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-slate-700">{document.title}</span>
-                  </div>
+                <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-6 text-xs text-slate-400">
+                  <span className="font-bold text-slate-700">{document.title}</span>
                   <span>Page {page.pageNumber} of {document.pageCount}</span>
                 </div>
 
-                {/* Main Content Section */}
                 <div className="space-y-6 text-slate-800">
-
                   <h1 className="text-2xl font-extrabold text-slate-900 border-b border-slate-100 pb-3">
                     {page.heading}
                   </h1>
 
                   {page.paragraphs.map((para, idx) => {
-                    // Check if this paragraph contains highlighted text
                     const matchedHighlight = document.highlights.find(
                       (h) => h.pageNumber === page.pageNumber && para.includes(h.selectedText)
                     );
@@ -421,7 +383,6 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
                     );
                   })}
 
-                  {/* Render Table or Metrics if present */}
                   {page.tablesOrMetrics && (
                     <div className="mt-8 space-y-3 bg-slate-50 p-5 rounded-2xl border border-slate-200">
                       <h3 className="font-bold text-sm text-slate-900">
@@ -449,12 +410,10 @@ export const PdfViewer: React.FC<PdfViewerProps> = ({
                       </div>
                     </div>
                   )}
-
                 </div>
 
-                {/* Page Footer */}
                 <div className="absolute bottom-6 left-8 right-8 border-t border-slate-200 pt-3 flex items-center justify-between text-[11px] text-slate-400">
-                  <span>DocuSphere Cloud PDF Reader • Confidential</span>
+                  <span>DocuFusion Reader</span>
                   <span>Page {page.pageNumber}</span>
                 </div>
 

@@ -10,13 +10,6 @@ export interface UserAccess {
   role: 'Owner' | 'Editor' | 'Viewer' | 'Commenter';
 }
 
-export interface MetricItem {
-  label: string;
-  value: string;
-  change?: string;
-  status?: 'positive' | 'negative' | 'neutral';
-}
-
 export interface HighlightAnnotation {
   id: string;
   pageNumber: number;
@@ -25,30 +18,6 @@ export interface HighlightAnnotation {
   comment?: string;
   author: string;
   createdAt: string;
-}
-
-export interface EntityTag {
-  name: string;
-  type: 'Financial' | 'Organization' | 'Technology' | 'Compliance' | 'Metric';
-}
-
-export interface AiAnalysis {
-  executiveSummary: string;
-  keyTakeaways: string[];
-  metrics: MetricItem[];
-  entities: EntityTag[];
-  sentiment: 'Bullish / Positive' | 'Neutral' | 'High Risk / Caution' | 'Informative';
-  targetAudience: string;
-  actionItems: string[];
-  suggestedQuestions: string[];
-}
-
-export interface ChatMessage {
-  id: string;
-  sender: 'user' | 'ai';
-  message: string;
-  timestamp: string;
-  referencedPages?: number[];
 }
 
 export interface PdfPageContent {
@@ -71,11 +40,9 @@ export interface PdfDocument {
   lastModified: string;
   starred: boolean;
   isEncrypted: boolean;
-  accessLevel: 'Restricted' | 'Domain Access (Cymbal Pty Ltd)' | 'Anyone with link';
+  accessLevel: 'Restricted' | 'Domain Access (DocuFusion)' | 'Anyone with link';
   sharedWith: UserAccess[];
   tags: string[];
   pages: PdfPageContent[];
   highlights: HighlightAnnotation[];
-  aiAnalysis: AiAnalysis;
-  chatHistory: ChatMessage[];
 }
